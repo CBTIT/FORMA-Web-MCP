@@ -1,8 +1,10 @@
 import { config } from "dotenv";
 import { fileURLToPath } from "url";
-import { dirname, join } from "path";
-// Load .env from project root regardless of what CWD the host process uses
-config({ path: join(dirname(fileURLToPath(import.meta.url)), "../.env") });
+import { dirname, join, resolve } from "path";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const projectRoot = resolve(__dirname, "..");
+config({ path: join(projectRoot, ".env") });
 
 const requiredEnvVars = ["APS_CLIENT_ID", "APS_CLIENT_SECRET", "FORMA_GRAPHQL_URL"];
 const missing = requiredEnvVars.filter((v) => !process.env[v]);
