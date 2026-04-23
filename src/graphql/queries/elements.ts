@@ -1,8 +1,8 @@
 // AEC Data Model API v1 - https://aps.autodesk.com/en/docs/aecdatamodel/v1/reference/
 
 export const GET_PROJECT_ELEMENTS_QUERY = `
-  query GetProjectElements($elementGroupId: ID!, $filter: String) {
-    elementsByElementGroup(elementGroupId: $elementGroupId, filter: { query: $filter }) {
+  query GetProjectElements($projectId: ID!, $filter: String) {
+    elements(projectId: $projectId, filter: { query: $filter }) {
       results {
         id
         name
@@ -18,8 +18,8 @@ export const GET_PROJECT_ELEMENTS_QUERY = `
 `;
 
 export const GET_ELEMENT_PROPERTIES_QUERY = `
-  query GetElementProperties($elementGroupId: ID!, $elementId: ID!) {
-    elementByElementGroup(elementGroupId: $elementGroupId, elementId: $elementId) {
+  query GetElementProperties($projectId: ID!, $elementId: ID!) {
+    element(projectId: $projectId, elementId: $elementId) {
       id
       name
       properties {
@@ -33,8 +33,8 @@ export const GET_ELEMENT_PROPERTIES_QUERY = `
 `;
 
 export const GET_AREA_BREAKDOWN_QUERY = `
-  query GetAreaBreakdown($elementGroupId: ID!) {
-    elementsByElementGroup(elementGroupId: $elementGroupId) {
+  query GetAreaBreakdown($projectId: ID!) {
+    elements(projectId: $projectId) {
       results {
         id
         name
