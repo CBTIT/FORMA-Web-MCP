@@ -7,22 +7,17 @@ export const LIST_HUBS_QUERY = `
       results {
         id
         name
-        region
       }
     }
   }
 `;
 
 export const LIST_PROJECTS_QUERY = `
-  query ListProjects($hubId: String!) {
+  query ListProjects($hubId: ID!) {
     projects(hubId: $hubId) {
       results {
         id
         name
-        status
-        modelUrn
-        createdAt
-        updatedAt
       }
     }
   }

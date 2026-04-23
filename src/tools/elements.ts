@@ -5,10 +5,21 @@ import {
   GET_ELEMENT_PROPERTIES_QUERY,
   GET_AREA_BREAKDOWN_QUERY,
 } from "../graphql/queries/elements.js";
-import type { Element, AreaBreakdownItem } from "../types/forma.js";
+
+interface ElementProperties {
+  name: string;
+  value: unknown;
+}
+
+interface Element {
+  id: string;
+  name: string;
+  category: string;
+  properties: { results: ElementProperties[] };
+}
 
 interface ElementsResponse {
-  elements: Element[];
+  elements: { results: Element[] };
 }
 
 interface ElementResponse {
@@ -16,7 +27,30 @@ interface ElementResponse {
 }
 
 interface AreaBreakdownResponse {
-  areaBreakdown: AreaBreakdownItem[];
+  elements: { results: Element[] };
+}
+
+export async function handleGetAreaBreakdown(args: {
+  project_id: string;
+}): Promise<CallToolResult> {
+  const client = await getFormaClient();
+  const data = await client.request<AreaBreakdownResponse>(GET_AREA_BREAKDOWN_QUERY, {
+    projectId: args.project_id,
+  });
+  const elements = data.elements?.results || [];
+  const breakdown: Record<string, { count: number; totalArea: number }> = {};
+  for (const el of elements) {
+    const cat = el.category || "Uncategorized";
+    if (!breakdown[cat]) breakdown[cat] = { count: 0, totalArea: 0 };
+    breakdown[cat].count++;
+    const areaProp = el.properties?.results?.find((p) => p.name === "Area" || p.name === "GrossArea");
+    if (areaProp && typeof areaProp.value === "number") {
+      breakdown[cat].totalArea += areaProp.value;
+    }
+  }
+  return {
+    content: [{ type: "text", text: JSON.stringify(breakdown, null, 2) }],
+  };
 }
 
 export async function handleGetProjectElements(args: {
@@ -28,8 +62,9 @@ export async function handleGetProjectElements(args: {
     projectId: args.project_id,
     category: args.type,
   });
+  const elements = data.elements?.results || [];
   return {
-    content: [{ type: "text", text: JSON.stringify(data.elements, null, 2) }],
+    content: [{ type: "text", text: JSON.stringify(elements, null, 2) }],
   };
 }
 
@@ -42,7 +77,7 @@ export async function handleGetElementsByCategory(args: {
     projectId: args.project_id,
     category: args.category,
   });
-  const elements = data.elements;
+  const elements = data.elements?.results || [];
   return {
     content: [
       {
@@ -83,16 +118,16 @@ export async function handleSearchElements(args: {
   property_value?: string;
 }): Promise<CallToolResult> {
   const client = await getFormaClient();
+  const filter = args.category ? `category==${args.category}` : undefined;
   const data = await client.request<ElementsResponse>(GET_PROJECT_ELEMENTS_QUERY, {
     projectId: args.project_id,
-    category: args.category,
+    category: filter,
   });
 
-  let results = data.elements;
-
+  let results = data.elements?.results || [];
   if (args.property_name) {
     results = results.filter((el) => {
-      const prop = el.properties.find((p) => p.name === args.property_name);
+      const prop = el.properties?.results?.find((p) => p.name === args.property_name);
       if (!prop) return false;
       if (args.property_value === undefined) return true;
       return String(prop.value) === args.property_value;
@@ -106,17 +141,5 @@ export async function handleSearchElements(args: {
         text: JSON.stringify({ count: results.length, elements: results }, null, 2),
       },
     ],
-  };
-}
-
-export async function handleGetAreaBreakdown(args: {
-  project_id: string;
-}): Promise<CallToolResult> {
-  const client = await getFormaClient();
-  const data = await client.request<AreaBreakdownResponse>(GET_AREA_BREAKDOWN_QUERY, {
-    projectId: args.project_id,
-  });
-  return {
-    content: [{ type: "text", text: JSON.stringify(data.areaBreakdown, null, 2) }],
   };
 }

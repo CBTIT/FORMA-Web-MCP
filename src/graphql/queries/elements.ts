@@ -1,41 +1,53 @@
-// NOTE: Field names are based on FORMA GraphQL schema conventions.
-// Introspect the live endpoint to confirm field names before first run.
+// AEC Data Model API v1 - https://aps.autodesk.com/en/docs/aecdatamodel/v1/reference/
 
 export const GET_PROJECT_ELEMENTS_QUERY = `
-  query GetProjectElements($projectId: String!, $category: String) {
-    elements(projectId: $projectId, category: $category) {
-      id
-      category
-      properties {
+  query GetProjectElements($projectId: ID!, $category: String) {
+    elements(projectId: $projectId, filter: { query: $category }) {
+      results {
+        id
         name
-        value
-        unit
+        category
+        properties {
+          results {
+            name
+            value
+          }
+        }
       }
     }
   }
 `;
 
 export const GET_ELEMENT_PROPERTIES_QUERY = `
-  query GetElementProperties($projectId: String!, $elementId: String!) {
-    element(projectId: $projectId, id: $elementId) {
+  query GetElementProperties($projectId: ID!, $elementId: ID!) {
+    element(projectId: $projectId, elementId: $elementId) {
       id
+      name
       category
       properties {
-        name
-        value
-        unit
+        results {
+          name
+          value
+        }
       }
     }
   }
 `;
 
 export const GET_AREA_BREAKDOWN_QUERY = `
-  query GetAreaBreakdown($projectId: String!) {
-    areaBreakdown(projectId: $projectId) {
-      category
-      count
-      totalArea
-      unit
+  query GetAreaBreakdown($projectId: ID!) {
+    elements(projectId: $projectId, filter: { query: "property.name.category" }) {
+      results {
+        id
+        name
+        category
+        properties {
+          results {
+            name
+            value
+          }
+        }
+      }
     }
   }
 `;
