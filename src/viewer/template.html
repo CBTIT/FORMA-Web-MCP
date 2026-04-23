@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FORMA Viewer</title>
+  <link
+    rel="stylesheet"
+    href="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/style.min.css"
+  />
+  <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/viewer3D.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #1a1a1a; overflow: hidden; }
+    #viewer { width: 100vw; height: 100vh; }
+    #status {
+      position: fixed;
+      bottom: 12px;
+      left: 12px;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      font: 12px/1.4 monospace;
+      padding: 6px 10px;
+      border-radius: 4px;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+  <div id="viewer"></div>
+  <div id="status">Initialising viewer…</div>
+
+  <script>
+    const TOKEN      = '__TOKEN__';
+    const URN        = '__URN__';
+    const PROJECT_ID = '__PROJECT_ID__';
+    const WS_PORT    = __WS_PORT__;
+
+    const statusEl = document.getElementById('status');
+    function setStatus(msg) { statusEl.textContent = msg; }
+
+    // externalId → dbId lookup (populated after object tree loads)
+    let externalIdMap = {};
+    let viewer = null;
+
+    const options = {
+      env: 'AutodeskProduction2',
+      api: 'streamingV2',
+      getAccessToken(onTokenReady) {
+        onTokenReady(TOKEN, 3600);
+      }
+    };
+
+    Autodesk.Viewing.Initializer(options, function () {
+      viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('viewer'));
+      viewer.start();
+      loadModel(URN);
+    });
+
+    function loadModel(urn) {
+      setStatus('Loading model…');
+      Autodesk.Viewing.Document.load(
+        'urn:' + urn,
+        function (doc) {
+          const defaultGeom = doc.getRoot().getDefaultGeometry();
+          viewer.loadDocumentNode(doc, defaultGeom).then(function () {
+            setStatus('Model loaded — Project: ' + PROJECT_ID);
+            buildExternalIdMap();
+          });
+        },
+        function (code, message) {
+          setStatus('Load error: ' + code + ' ' + message);
+          console.error('Document load failure', code, message);
+        }
+      );
+    }
+
+    function buildExternalIdMap() {
+      viewer.model.getExternalIdMapping(
+        function (mapping) { externalIdMap = mapping; },
+        function (err) { console.warn('externalIdMapping failed', err); }
+      );
+    }
+
+    // WebSocket bridge — receives commands from the MCP server
+    const ws = new WebSocket('ws://localhost:' + WS_PORT);
+
+    ws.addEventListener('open',    () => setStatus('Connected to MCP bridge'));
+    ws.addEventListener('close',   () => setStatus('MCP bridge disconnected'));
+    ws.addEventListener('error',   () => setStatus('MCP bridge error'));
+
+    ws.addEventListener('message', function (event) {
+      let msg;
+      try { msg = JSON.parse(event.data); } catch { return; }
+
+      if (msg.type === 'load') {
+        externalIdMap = {};
+        loadModel(msg.modelUrn);
+      }
+
+      if (msg.type === 'highlight' && viewer) {
+        const dbIds = msg.elementIds
+          .map(id => externalIdMap[id])
+          .filter(Boolean);
+
+        viewer.clearSelection();
+        if (dbIds.length > 0) {
+          viewer.select(dbIds);
+          viewer.fitToView(dbIds);
+          setStatus('Highlighted ' + dbIds.length + ' element(s)');
+        } else {
+          setStatus('No matching elements found in model for given IDs');
+        }
+      }
+    });
+  </script>
+</body>
+</html>
