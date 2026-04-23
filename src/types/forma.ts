@@ -8,6 +8,7 @@ export interface Project {
   id: string;
   name: string;
   status?: string;
+  modelUrn?: string;
   createdAt?: string;
   updatedAt?: string;
 }

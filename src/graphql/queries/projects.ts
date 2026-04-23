@@ -17,6 +17,7 @@ export const LIST_PROJECTS_QUERY = `
       id
       name
       status
+      modelUrn
       createdAt
       updatedAt
     }

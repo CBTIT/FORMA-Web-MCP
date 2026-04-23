@@ -3,6 +3,14 @@ import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 // Load .env from project root regardless of what CWD the host process uses
 config({ path: join(dirname(fileURLToPath(import.meta.url)), "../.env") });
+
+const requiredEnvVars = ["APS_CLIENT_ID", "APS_CLIENT_SECRET", "FORMA_GRAPHQL_URL"];
+const missing = requiredEnvVars.filter((v) => !process.env[v]);
+if (missing.length > 0) {
+  console.error(`Missing required environment variables: ${missing.join(", ")}`);
+  console.error("Please create a .env file in the project root.");
+  process.exit(1);
+}
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -13,7 +21,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 
 import { runOAuthFlow } from "./auth/oauth.js";
-import { handleListHubs, handleListProjects } from "./tools/hubs.js";
+import { handleListHubs, handleListProjects, handleGetProjectModelUrn } from "./tools/hubs.js";
 import {
   handleGetProjectElements,
   handleGetElementsByCategory,
@@ -163,6 +171,18 @@ const TOOLS: Tool[] = [
     },
   },
   {
+    name: "get_project_model_urn",
+    description:
+      "Returns the model URN for a specific project, required for opening the viewer.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        project_id: { type: "string", description: "Project ID" },
+      },
+      required: ["project_id"],
+    },
+  },
+  {
     name: "highlight_elements_in_viewer",
     description:
       "Highlights a set of element IDs in the currently open Viewer session and zooms to them.",
@@ -247,6 +267,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         result = await handleOpenViewer(
           args as { project_id: string; model_urn: string }
         );
+        break;
+
+      case "get_project_model_urn":
+        result = await handleGetProjectModelUrn(args as { project_id: string });
         break;
 
       case "highlight_elements_in_viewer":
