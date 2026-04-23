@@ -4,9 +4,11 @@
 export const LIST_HUBS_QUERY = `
   query ListHubs {
     hubs {
-      id
-      name
-      region
+      results {
+        id
+        name
+        region
+      }
     }
   }
 `;
@@ -14,12 +16,14 @@ export const LIST_HUBS_QUERY = `
 export const LIST_PROJECTS_QUERY = `
   query ListProjects($hubId: String!) {
     projects(hubId: $hubId) {
-      id
-      name
-      status
-      modelUrn
-      createdAt
-      updatedAt
+      results {
+        id
+        name
+        status
+        modelUrn
+        createdAt
+        updatedAt
+      }
     }
   }
 `;

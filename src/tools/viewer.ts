@@ -6,7 +6,7 @@ import { LIST_PROJECTS_QUERY } from "../graphql/queries/projects.js";
 import { startViewerServer, highlightInViewer } from "../viewer/server.js";
 
 interface ProjectsResponse {
-  projects: { id: string; name: string; modelUrn?: string }[];
+  projects: { results: { id: string; name: string; modelUrn?: string }[] };
 }
 
 async function fetchModelUrn(projectId: string): Promise<string> {
@@ -14,7 +14,7 @@ async function fetchModelUrn(projectId: string): Promise<string> {
   const data = await client.request<ProjectsResponse>(LIST_PROJECTS_QUERY, {
     hubId: "",
   });
-  const project = data.projects.find((p) => p.id === projectId);
+  const project = data.projects.results.find((p) => p.id === projectId);
   if (!project) throw new Error(`Project not found: ${projectId}`);
   if (!project.modelUrn) throw new Error(`No model available for project: ${projectId}`);
   return project.modelUrn;

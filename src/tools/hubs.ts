@@ -4,18 +4,18 @@ import { LIST_HUBS_QUERY, LIST_PROJECTS_QUERY } from "../graphql/queries/project
 import type { Hub, Project } from "../types/forma.js";
 
 interface HubsResponse {
-  hubs: Hub[];
+  hubs: { results: Hub[] };
 }
 
 interface ProjectsResponse {
-  projects: Project[];
+  projects: { results: Project[] };
 }
 
 export async function handleListHubs(): Promise<CallToolResult> {
   const client = await getFormaClient();
   const data = await client.request<HubsResponse>(LIST_HUBS_QUERY);
   return {
-    content: [{ type: "text", text: JSON.stringify(data.hubs, null, 2) }],
+    content: [{ type: "text", text: JSON.stringify(data.hubs.results, null, 2) }],
   };
 }
 
@@ -27,7 +27,7 @@ export async function handleListProjects(args: {
     hubId: args.hub_id,
   });
   return {
-    content: [{ type: "text", text: JSON.stringify(data.projects, null, 2) }],
+    content: [{ type: "text", text: JSON.stringify(data.projects.results, null, 2) }],
   };
 }
 
@@ -38,7 +38,7 @@ export async function handleGetProjectModelUrn(args: {
   const data = await client.request<ProjectsResponse>(LIST_PROJECTS_QUERY, {
     hubId: "",
   });
-  const project = data.projects.find((p) => p.id === args.project_id);
+  const project = data.projects.results.find((p) => p.id === args.project_id);
   if (!project) {
     return {
       content: [{ type: "text", text: `Project not found: ${args.project_id}` }],
