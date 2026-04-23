@@ -10,5 +10,5 @@
 | 6 | feat | `compare_projects` tool — side-by-side area breakdown comparison | ✅ done | c38fd53 |
 | 7 | viewer | Local Autodesk Viewer Express server + WebSocket highlight bridge | ✅ done | f3a7d33 |
 | 8 | feat | MCP server entry point — all tools registered, stdio transport | ✅ done | b0a95e8 |
-| 9 | feat | `get_project_model_urn` tool + auto URN fetch in open_viewer | ✅ done | — |
-| 10 | config | Environment variable validation at startup | ✅ done | — |
+|  9 | feat | `get_project_model_urn` tool + auto URN fetch in open_viewer | ✅ done | 67d3486 |
+| 10 | config | Environment variable validation at startup | ✅ done | 67d3486 |
