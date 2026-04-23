@@ -13,7 +13,7 @@ type ElementGroup = { id: string; name: string };
 
 interface ElementGroupsResponse {
   elementGroupsByProject: {
-    pagination: { cursor: string; hasNextPage: boolean };
+    pagination: { cursor: string };
     results: ElementGroup[];
   };
 }
@@ -77,7 +77,6 @@ export async function handleListElementGroups(args: {
         text: JSON.stringify(
           {
             count: groups.length,
-            hasMore: data.elementGroupsByProject?.pagination?.hasNextPage || false,
             element_groups: groups,
           },
           null,

@@ -5,7 +5,6 @@ export const LIST_ELEMENT_GROUPS_QUERY = `
     elementGroupsByProject(projectId: $projectId, pagination: { cursor: $cursor, limit: 50 }) {
       pagination {
         cursor
-        hasNextPage
       }
       results {
         id
