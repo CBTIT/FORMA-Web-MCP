@@ -7,7 +7,7 @@ const APS_AUTH_URL =
   "https://developer.api.autodesk.com/authentication/v2/authorize";
 const APS_TOKEN_URL =
   "https://developer.api.autodesk.com/authentication/v2/token";
-const SCOPES = "data:read data:write viewables:read";
+const SCOPES = "data:read data:write data:create viewables:read";
 
 export async function runOAuthFlow(): Promise<void> {
   const clientId = process.env.APS_CLIENT_ID;

@@ -170,7 +170,7 @@ src/
 5. Tokens written to `.tokens.json`, temporary server shuts down
 6. All subsequent tool calls load the token from `.tokens.json`, refreshing automatically if expired
 
-**Required APS OAuth scopes:** `data:read`, `data:write`, `viewables:read`
+**Required APS OAuth scopes:** `data:read`, `data:write`, `data:create`, `viewables:read`
 
 ---
 
