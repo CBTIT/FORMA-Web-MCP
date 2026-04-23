@@ -33,7 +33,7 @@ import {
   handleGetAreaBreakdown,
 } from "./tools/elements.js";
 import { handleCompareProjects } from "./tools/compare.js";
-import { handleOpenViewer, handleHighlightElements } from "./tools/viewer.js";
+import { handleOpenViewer, handleHighlightElements, handleGetModelUrn } from "./tools/viewer.js";
 
 const server = new Server(
   { name: "forma-web-mcp", version: "0.1.0" },
@@ -187,11 +187,11 @@ const TOOLS: Tool[] = [
   {
     name: "get_project_model_urn",
     description:
-      "Returns the model URN for a specific project, required for opening the viewer.",
+      "Returns the model URN for a specific project. Use project_id from list_projects.",
     inputSchema: {
       type: "object",
       properties: {
-        project_id: { type: "string", description: "Project ID" },
+        project_id: { type: "string", description: "Project ID from list_projects" },
       },
       required: ["project_id"],
     },
@@ -288,7 +288,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         break;
 
       case "get_project_model_urn":
-        result = await handleGetProjectModelUrn(args as { project_id: string });
+        result = await handleGetModelUrn(args as { project_id: string });
         break;
 
       case "highlight_elements_in_viewer":

@@ -1,34 +1,42 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import open from "open";
 import { getValidToken } from "../auth/tokens.js";
-import { getFormaClient } from "../graphql/client.js";
-import { LIST_PROJECTS_QUERY } from "../graphql/queries/projects.js";
 import { startViewerServer, highlightInViewer } from "../viewer/server.js";
 
-interface ProjectsResponse {
-  projects: { results: { id: string; name: string; modelUrn?: string }[] };
-}
-
-async function fetchModelUrn(projectId: string): Promise<string> {
-  const client = await getFormaClient();
-  const data = await client.request<ProjectsResponse>(LIST_PROJECTS_QUERY, {
-    hubId: "",
-  });
-  const project = data.projects.results.find((p) => p.id === projectId);
-  if (!project) throw new Error(`Project not found: ${projectId}`);
-  if (!project.modelUrn) throw new Error(`No model available for project: ${projectId}`);
-  return project.modelUrn;
+export async function handleGetModelUrn(_args: {
+  project_id: string;
+}): Promise<CallToolResult> {
+  return {
+    content: [
+      {
+        type: "text",
+        text: JSON.stringify(
+          {
+            note: "Model URN must be obtained from ACC/FORMA manually",
+            instructions: [
+              "1. Open your project in Autodesk Construction Cloud (ACC)",
+              "2. Navigate to the model/drawing",
+              "3. Copy the URN from the URL or model details",
+              "4. Use open_viewer with the model_urn parameter"
+            ],
+            example_urn: "urn:adsk.dwg:xxxxxxxxxxxxx"
+          },
+          null,
+          2
+        ),
+      },
+    ],
+  };
 }
 
 export async function handleOpenViewer(args: {
   project_id: string;
-  model_urn?: string;
+  model_urn: string;
 }): Promise<CallToolResult> {
   const token = await getValidToken();
-  const modelUrn = args.model_urn || await fetchModelUrn(args.project_id);
   const port = startViewerServer(token, {
     projectId: args.project_id,
-    modelUrn,
+    modelUrn: args.model_urn,
   });
 
   const url = `http://localhost:${port}/viewer`;

@@ -175,12 +175,13 @@ src/
 
 ---
 
-## FORMA GraphQL Notes
+## AEC Data Model API Workflow
 
-- FORMA elements have typed properties — areas, heights, department tags — exposed as GraphQL fields
-- Area comparison queries aggregate `grossArea` or similar numeric properties across element collections
-- The `FORMA_GRAPHQL_URL` endpoint requires a valid APS bearer token in the `Authorization` header
-- Confirm the exact schema by introspecting the endpoint or checking the FORMA API docs
+```
+list_hubs → list_projects(hub_id) → list_element_groups(project_id) → element queries
+```
+
+**Note:** The AEC Data Model API uses ElementGroup IDs, not Project IDs, for element queries.
 
 ### Introspecting the Schema
 
