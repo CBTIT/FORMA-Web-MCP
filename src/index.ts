@@ -1,4 +1,8 @@
-import "dotenv/config";
+import { config } from "dotenv";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+// Load .env from project root regardless of what CWD the host process uses
+config({ path: join(dirname(fileURLToPath(import.meta.url)), "../.env") });
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
