@@ -1,12 +1,11 @@
 // AEC Data Model API v1 - https://aps.autodesk.com/en/docs/aecdatamodel/v1/reference/
 
 export const GET_PROJECT_ELEMENTS_QUERY = `
-  query GetProjectElements($projectId: ID!, $category: String) {
-    elements(projectId: $projectId, filter: { query: $category }) {
+  query GetProjectElements($elementGroupId: ID!, $filter: String) {
+    elementsByElementGroup(elementGroupId: $elementGroupId, filter: { query: $filter }) {
       results {
         id
         name
-        category
         properties {
           results {
             name
@@ -19,11 +18,10 @@ export const GET_PROJECT_ELEMENTS_QUERY = `
 `;
 
 export const GET_ELEMENT_PROPERTIES_QUERY = `
-  query GetElementProperties($projectId: ID!, $elementId: ID!) {
-    element(projectId: $projectId, elementId: $elementId) {
+  query GetElementProperties($elementGroupId: ID!, $elementId: ID!) {
+    elementByElementGroup(elementGroupId: $elementGroupId, elementId: $elementId) {
       id
       name
-      category
       properties {
         results {
           name
@@ -35,12 +33,11 @@ export const GET_ELEMENT_PROPERTIES_QUERY = `
 `;
 
 export const GET_AREA_BREAKDOWN_QUERY = `
-  query GetAreaBreakdown($projectId: ID!) {
-    elements(projectId: $projectId, filter: { query: "property.name.category" }) {
+  query GetAreaBreakdown($elementGroupId: ID!) {
+    elementsByElementGroup(elementGroupId: $elementGroupId) {
       results {
         id
         name
-        category
         properties {
           results {
             name

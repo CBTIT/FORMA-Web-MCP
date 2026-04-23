@@ -14,20 +14,15 @@ interface ElementProperties {
 interface Element {
   id: string;
   name: string;
-  category: string;
   properties: { results: ElementProperties[] };
 }
 
 interface ElementsResponse {
-  elements: { results: Element[] };
-}
-
-interface ElementResponse {
-  element: Element;
+  elementsByElementGroup: { results: Element[] };
 }
 
 interface AreaBreakdownResponse {
-  elements: { results: Element[] };
+  elementsByElementGroup: { results: Element[] };
 }
 
 export async function handleGetAreaBreakdown(args: {
@@ -35,15 +30,17 @@ export async function handleGetAreaBreakdown(args: {
 }): Promise<CallToolResult> {
   const client = await getFormaClient();
   const data = await client.request<AreaBreakdownResponse>(GET_AREA_BREAKDOWN_QUERY, {
-    projectId: args.project_id,
+    elementGroupId: args.project_id,
   });
-  const elements = data.elements?.results || [];
+  const elements = data.elementsByElementGroup?.results || [];
   const breakdown: Record<string, { count: number; totalArea: number }> = {};
   for (const el of elements) {
-    const cat = el.category || "Uncategorized";
+    const props = el.properties?.results || [];
+    const categoryProp = props.find((p) => p.name === "category");
+    const cat = (categoryProp?.value as string) || "Uncategorized";
     if (!breakdown[cat]) breakdown[cat] = { count: 0, totalArea: 0 };
     breakdown[cat].count++;
-    const areaProp = el.properties?.results?.find((p) => p.name === "Area" || p.name === "GrossArea");
+    const areaProp = props.find((p) => p.name === "Area" || p.name === "GrossArea");
     if (areaProp && typeof areaProp.value === "number") {
       breakdown[cat].totalArea += areaProp.value;
     }
@@ -58,11 +55,12 @@ export async function handleGetProjectElements(args: {
   type?: string;
 }): Promise<CallToolResult> {
   const client = await getFormaClient();
+  const filter = args.type ? `property.name.category=='${args.type}'` : undefined;
   const data = await client.request<ElementsResponse>(GET_PROJECT_ELEMENTS_QUERY, {
-    projectId: args.project_id,
-    category: args.type,
+    elementGroupId: args.project_id,
+    filter,
   });
-  const elements = data.elements?.results || [];
+  const elements = data.elementsByElementGroup?.results || [];
   return {
     content: [{ type: "text", text: JSON.stringify(elements, null, 2) }],
   };
@@ -73,11 +71,12 @@ export async function handleGetElementsByCategory(args: {
   category: string;
 }): Promise<CallToolResult> {
   const client = await getFormaClient();
+  const filter = `property.name.category=='${args.category}'`;
   const data = await client.request<ElementsResponse>(GET_PROJECT_ELEMENTS_QUERY, {
-    projectId: args.project_id,
-    category: args.category,
+    elementGroupId: args.project_id,
+    filter,
   });
-  const elements = data.elements?.results || [];
+  const elements = data.elementsByElementGroup?.results || [];
   return {
     content: [
       {
@@ -102,12 +101,12 @@ export async function handleGetElementProperties(args: {
   element_id: string;
 }): Promise<CallToolResult> {
   const client = await getFormaClient();
-  const data = await client.request<ElementResponse>(GET_ELEMENT_PROPERTIES_QUERY, {
-    projectId: args.project_id,
+  const data = await client.request<{ elementByElementGroup: Element }>(GET_ELEMENT_PROPERTIES_QUERY, {
+    elementGroupId: args.project_id,
     elementId: args.element_id,
   });
   return {
-    content: [{ type: "text", text: JSON.stringify(data.element, null, 2) }],
+    content: [{ type: "text", text: JSON.stringify(data.elementByElementGroup, null, 2) }],
   };
 }
 
@@ -118,19 +117,20 @@ export async function handleSearchElements(args: {
   property_value?: string;
 }): Promise<CallToolResult> {
   const client = await getFormaClient();
-  const filter = args.category ? `category==${args.category}` : undefined;
+  let filter: string | undefined;
+  if (args.category) {
+    filter = `property.name.category=='${args.category}'`;
+  }
   const data = await client.request<ElementsResponse>(GET_PROJECT_ELEMENTS_QUERY, {
-    projectId: args.project_id,
-    category: filter,
+    elementGroupId: args.project_id,
+    filter,
   });
 
-  let results = data.elements?.results || [];
-  if (args.property_name) {
+  let results = data.elementsByElementGroup?.results || [];
+  if (args.property_name && args.property_value) {
     results = results.filter((el) => {
       const prop = el.properties?.results?.find((p) => p.name === args.property_name);
-      if (!prop) return false;
-      if (args.property_value === undefined) return true;
-      return String(prop.value) === args.property_value;
+      return prop && String(prop.value) === args.property_value;
     });
   }
 

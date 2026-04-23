@@ -182,6 +182,19 @@ src/
 - The `FORMA_GRAPHQL_URL` endpoint requires a valid APS bearer token in the `Authorization` header
 - Confirm the exact schema by introspecting the endpoint or checking the FORMA API docs
 
+### Introspecting the Schema
+
+To discover the correct query field names, run:
+
+```bash
+curl -X POST https://developer.api.autodesk.com/aec/graphql \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"{__schema{types{name fields{name}}}"}'
+```
+
+Or use the AEC Data Model Explorer: https://aecdatamodel-explorer-beta.autodesk.io
+
 ---
 
 ## Key Implementation Constraints
